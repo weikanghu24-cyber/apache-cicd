@@ -1,0 +1,26 @@
+name: Build & Deploy Apache desde cero
+
+on:
+  push:
+    branches: ["main"]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Descargar código
+        uses: actions/checkout@v4
+
+      - name: Despliegue inicial por SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          script: |
+            if [ ! -d "/srv/apache-cicd/.git" ]; then
+              git clone https://github.com/${{ github.repository }} /srv/apache-cicd
+            fi
+            cd /srv/apache-cicd
+            git pull origin main
+            docker compose up -d --build
